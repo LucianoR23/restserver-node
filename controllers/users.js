@@ -3,22 +3,27 @@ const bcryptjs = require('bcryptjs')
 
 const User = require('../models/user');
 
-const usersGet = (req = request, res = response) => {
+const usersGet = async(req = request, res = response) => {
 
-    const {q, nombre = 'No name'} = req.query;
+    const { limit = 5, from = 0} = req.query;
+
+    const [ total, users ] = await Promise.all([
+        User.countDocuments({ estado: true }),
+        User.find({ estado: true })
+        .skip(Number(from))
+        .limit(Number(limit))
+    ])
     
     res.json({
-        msg: 'get API - controlador',
-        code: 2310,
-        q,
-        nombre
-    })
+        total,
+        users
+    });
 }
 
 const usersPut = async(req, res = response) => {
 
     const id = req.params.id;
-    const { password, google, ...resto } = req.body;
+    const { _id, password, google, ...resto } = req.body;
 
     if( password ) {
         // Encriptar contra
@@ -29,11 +34,7 @@ const usersPut = async(req, res = response) => {
     const userDB = await User.findByIdAndUpdate( id, resto )
 
 
-    res.json({
-        msg: 'put API - controlador',
-        code: 2310,
-        userDB
-    })
+    res.json(userDB)
 }
 
 const usersPost = async(req, res = response) => {
@@ -53,10 +54,18 @@ const usersPost = async(req, res = response) => {
     })
 };
 
-const usersDelete = (req, res = response) => {
+const usersDelete = async(req, res = response) => {
+
+    const { id } = req.params
+
+    // Fisicamente lo borramos
+    // const user = await User.findByIdAndDelete( id );
+
+    const user = await User.findByIdAndUpdate( id, {estado: false} )
+
+
     res.json({
-        msg: 'delete API - controlador',
-        code: 2310
+        user
     })
 };
 
