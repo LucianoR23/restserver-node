@@ -10,7 +10,7 @@ const crearProducto = async( req, res = response ) => {
 
     if( productoDB ) {
         return res.status(400).json({
-            msg: `La producto ${productoDB.nombre}, ya existe`
+            msg: `El producto ${productoDB.nombre}, ya existe`
         })
     }
 
@@ -57,7 +57,6 @@ const obtenerProducto = async(req, res = response ) => {
     const producto = await Product.findById( id )
                             .populate('user', 'nombre')
                             .populate('categorie', 'nombre');
-    console.log(req.params);
 
     res.json( producto );
 
@@ -86,7 +85,7 @@ const borrarProducto = async(req, res = response) => {
 
     const { id } = req.params
 
-    const productoBorrado = await Product.findByIdAndUpdate( id, {estado: false}, {new: true} )
+    const productoBorrado = await Product.findByIdAndUpdate( id, {estado: false, disponible: false}, {new: true} )
 
 
 
