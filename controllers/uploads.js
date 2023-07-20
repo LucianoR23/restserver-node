@@ -1,3 +1,5 @@
+const path = require('path')
+const fs = require('fs')
 const { response } = require("express");
 const { subirArchivo } = require("../helpers");
 
@@ -5,11 +7,6 @@ const { User, Product } = require('../models');
 
 
 const cargarArchivo = async( req, res = response ) => {
-
-    if ( !req.files || Object.keys(req.files).length === 0 || !req.files.archivo ) {
-        res.status(400).json({msg: 'No hay archivos que subir'});
-        return;
-    }
     
     try {
         const nombre = await subirArchivo( req.files, undefined, 'imgs' )
@@ -22,13 +19,14 @@ const cargarArchivo = async( req, res = response ) => {
 
 const actualizarArchivo = async(req, res = response) => {
 
+
     const { collection, id } = req.params
 
     let modelo;
 
     switch (collection) {
         case 'users':
-            modelo = User.findById(id)
+            modelo = await User.findById(id)
             if ( !modelo ) {
                 return res.status(400).json({
                     msg: `No existe el usuario con id ${ id }`
@@ -36,7 +34,7 @@ const actualizarArchivo = async(req, res = response) => {
             }
             break;
         case 'products':
-            modelo = Product.findById(id)
+            modelo = await Product.findById(id)
             if ( !modelo ) {
                 return res.status(400).json({
                     msg: `No existe el producto con el id ${id}`
@@ -47,6 +45,15 @@ const actualizarArchivo = async(req, res = response) => {
         default:
             return res.status(500).json({ msg: 'Se me olvido validar esto' })
 
+
+    }
+    
+
+    if( modelo.img ){
+        const pathImg = path.join( __dirname, '../uploads/', collection, modelo.img )
+        if( fs.existsSync( pathImg ) ) {
+            fs.unlinkSync( pathImg )
+        }
     }
 
     const nombre = await subirArchivo( req.files, undefined, collection )
